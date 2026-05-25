@@ -49,6 +49,17 @@ export default function Garden({ sessions, tags, gardenPlacements, onGardenPlace
   function handleDragStart(event, sessionId) {
     event.dataTransfer.setData('text/plain', sessionId);
     event.dataTransfer.effectAllowed = 'move';
+    event.currentTarget.classList.add('is-dragging');
+
+    const plantFigure = event.currentTarget.querySelector('.plant-mark');
+    if (plantFigure) {
+      const rect = plantFigure.getBoundingClientRect();
+      event.dataTransfer.setDragImage(plantFigure, rect.width / 2, rect.height / 2);
+    }
+  }
+
+  function handleDragEnd(event) {
+    event.currentTarget.classList.remove('is-dragging');
   }
 
   function handleDrop(event) {
@@ -101,6 +112,7 @@ export default function Garden({ sessions, tags, gardenPlacements, onGardenPlace
                     className="library-flora"
                     draggable
                     onDragStart={(event) => handleDragStart(event, session.id)}
+                    onDragEnd={handleDragEnd}
                   >
                     <PlantMark type={session.plantType} compact />
                     <div>
@@ -134,6 +146,7 @@ export default function Garden({ sessions, tags, gardenPlacements, onGardenPlace
                   draggable
                   style={{ left: `${placement.x}%`, top: `${placement.y}%` }}
                   onDragStart={(event) => handleDragStart(event, session.id)}
+                  onDragEnd={handleDragEnd}
                   title={`${formatDateTime(session.endedAt)}\n${formatMinutes(session.actualMinutes)}\n${session.tag}`}
                 >
                   <PlantMark type={session.plantType} />

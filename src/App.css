@@ -577,6 +577,11 @@ h3 {
   cursor: grabbing;
 }
 
+.library-flora.is-dragging,
+.planted-flora.is-dragging {
+  opacity: 0.72;
+}
+
 .library-flora strong,
 .library-flora span {
   display: block;
@@ -637,6 +642,11 @@ h3 {
 .planted-flora:focus-visible .plot-detail {
   opacity: 1;
   transform: translate(-50%, 0);
+}
+
+.planted-flora.is-dragging .plot-detail,
+.library-flora.is-dragging .plot-detail {
+  opacity: 0;
 }
 
 .garden-plot {
