@@ -2,17 +2,34 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { formatTimer } from '../utils/dateUtils';
 
 const presets = [25, 50, 60, 90];
-const plantOptions = [
-  { value: 'flower', label: 'Flower', minutes: 25, icon: 'flower' },
-  { value: 'small tree', label: 'Small tree', minutes: 50, icon: 'small-tree' },
-  { value: 'pine tree', label: 'Pine tree', minutes: 60, icon: 'pine' },
-  { value: 'large tree', label: 'Large tree', minutes: 90, icon: 'large-tree' },
+const shortPlants = [
+  { value: 'flower', label: 'Flower' },
+  { value: 'bush', label: 'Bush' },
+  { value: 'fungi', label: 'Fungi' },
+];
+const mediumPlants = [
+  { value: 'pine tree', label: 'Pine' },
+  { value: 'poplar tree', label: 'Poplar' },
+  { value: 'oak tree', label: 'Oak' },
+  { value: 'small tree', label: 'Young tree' },
+];
+const longPlants = [
+  { value: 'large tree', label: 'Large tree' },
+  { value: 'oak tree', label: 'Oak' },
+  { value: 'pine tree', label: 'Pine' },
+  { value: 'poplar tree', label: 'Poplar' },
 ];
 
+export function plantOptionsForMinutes(minutes) {
+  const duration = Number(minutes);
+  if (duration <= 20) return shortPlants;
+  if (duration <= 60) return mediumPlants;
+  return longPlants;
+}
+
 export function plantForMinutes(minutes) {
-  if (Number(minutes) >= 90) return 'large tree';
-  if (Number(minutes) >= 60) return 'pine tree';
-  if (Number(minutes) >= 50) return 'small tree';
+  if (Number(minutes) > 60) return 'large tree';
+  if (Number(minutes) > 20) return 'oak tree';
   return 'flower';
 }
 
@@ -32,10 +49,39 @@ export function PlantMark({ type, status = 'completed', compact = false }) {
           <span className="trunk" />
         </>
       )}
+      {normalized === 'bush' && (
+        <>
+          <span className="bush-leaf left" />
+          <span className="bush-leaf center" />
+          <span className="bush-leaf right" />
+        </>
+      )}
+      {normalized === 'fungi' && (
+        <>
+          <span className="fungi-cap main" />
+          <span className="fungi-stem main" />
+          <span className="fungi-cap small" />
+          <span className="fungi-stem small" />
+        </>
+      )}
       {normalized === 'pine tree' && (
         <>
           <span className="pine one" />
           <span className="pine two" />
+          <span className="trunk" />
+        </>
+      )}
+      {normalized === 'poplar tree' && (
+        <>
+          <span className="poplar" />
+          <span className="trunk" />
+        </>
+      )}
+      {normalized === 'oak tree' && (
+        <>
+          <span className="canopy oak main" />
+          <span className="canopy oak left" />
+          <span className="canopy oak right" />
           <span className="trunk" />
         </>
       )}
@@ -50,11 +96,13 @@ export function PlantMark({ type, status = 'completed', compact = false }) {
   );
 }
 
-export default function Timer({ tags, onSessionSaved }) {
+export default function Timer({ tags, onAddTag, onSessionSaved }) {
   const [plannedMinutes, setPlannedMinutes] = useState(50);
   const [customMinutes, setCustomMinutes] = useState('');
   const [tag, setTag] = useState(tags[0] || 'lab');
-  const [plantType, setPlantType] = useState('small tree');
+  const [newTag, setNewTag] = useState('');
+  const [tagMessage, setTagMessage] = useState('');
+  const [plantType, setPlantType] = useState('oak tree');
   const [note, setNote] = useState('');
   const [session, setSession] = useState(null);
   const [remainingSeconds, setRemainingSeconds] = useState(50 * 60);
@@ -65,10 +113,21 @@ export default function Timer({ tags, onSessionSaved }) {
     const custom = Number(customMinutes);
     return customMinutes && custom > 0 ? Math.round(custom) : plannedMinutes;
   }, [customMinutes, plannedMinutes]);
+  const availablePlants = useMemo(() => plantOptionsForMinutes(actualPlannedMinutes), [actualPlannedMinutes]);
 
   useEffect(() => {
     if (!session) setRemainingSeconds(actualPlannedMinutes * 60);
   }, [actualPlannedMinutes, session]);
+
+  useEffect(() => {
+    if (!tags.includes(tag)) setTag(tags[0] || 'other');
+  }, [tag, tags]);
+
+  useEffect(() => {
+    if (!session && !availablePlants.some((plant) => plant.value === plantType)) {
+      setPlantType(availablePlants[0].value);
+    }
+  }, [availablePlants, plantType, session]);
 
   useEffect(() => {
     if (!session || isPaused) return undefined;
@@ -137,7 +196,16 @@ export default function Timer({ tags, onSessionSaved }) {
   function selectPreset(minutes) {
     setPlannedMinutes(minutes);
     setCustomMinutes('');
-    setPlantType(plantForMinutes(minutes));
+  }
+
+  function addCustomTag(event) {
+    event.preventDefault();
+    const trimmed = newTag.trim().toLowerCase();
+    if (!trimmed) return;
+    const added = onAddTag(trimmed);
+    setTag(trimmed);
+    setNewTag('');
+    setTagMessage(added ? `Added "${trimmed}".` : `Using existing "${trimmed}".`);
   }
 
   return (
@@ -223,12 +291,31 @@ export default function Timer({ tags, onSessionSaved }) {
               </option>
             ))}
           </select>
+          <form className="quick-tag-form" onSubmit={addCustomTag}>
+            <input
+              value={newTag}
+              disabled={Boolean(session)}
+              onChange={(event) => setNewTag(event.target.value)}
+              placeholder="Add custom tag"
+            />
+            <button type="submit" disabled={Boolean(session) || !newTag.trim()}>
+              Add
+            </button>
+          </form>
+          {tagMessage && <span className="field-note">{tagMessage}</span>}
         </label>
 
         <label>
           Plant
+          <span className="field-note">
+            {actualPlannedMinutes <= 20
+              ? 'Short sessions allow flowers, bushes, and fungi.'
+              : actualPlannedMinutes <= 60
+                ? 'Medium sessions unlock larger trees.'
+                : 'Long sessions keep the full tree nursery available.'}
+          </span>
           <div className="plant-select">
-            {plantOptions.map((plant) => (
+            {availablePlants.map((plant) => (
               <button
                 key={plant.value}
                 className={plantType === plant.value ? 'selected plant-option' : 'plant-option'}

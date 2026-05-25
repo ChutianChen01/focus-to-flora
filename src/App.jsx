@@ -97,7 +97,7 @@ export default function App() {
       </nav>
 
       <main>
-        {activeView === 'timer' && <Timer tags={tags} onSessionSaved={addSession} />}
+        {activeView === 'timer' && <Timer tags={tags} onAddTag={addTag} onSessionSaved={addSession} />}
         {activeView === 'garden' && <Garden sessions={sessions} tags={tags} />}
         {activeView === 'stats' && <Stats sessions={sessions} />}
         {activeView === 'history' && (
