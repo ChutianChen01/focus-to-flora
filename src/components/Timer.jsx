@@ -283,26 +283,29 @@ export default function Timer({ tags, onAddTag, onSessionSaved }) {
           />
         </label>
 
-        <label>
+        <label className="tag-field">
           Tag
-          <select value={tag} disabled={Boolean(session)} onChange={(event) => setTag(event.target.value)}>
-            {tags.map((tagName) => (
-              <option key={tagName} value={tagName}>
-                {tagName}
-              </option>
-            ))}
-          </select>
-          <form className="quick-tag-form" onSubmit={addCustomTag}>
-            <input
-              value={newTag}
-              disabled={Boolean(session)}
-              onChange={(event) => setNewTag(event.target.value)}
-              placeholder="Add custom tag"
-            />
-            <button type="submit" disabled={Boolean(session) || !newTag.trim()}>
-              Add
-            </button>
-          </form>
+          <div className="tag-picker">
+            <span className="tag-sprout" aria-hidden="true" />
+            <select className="tag-select" value={tag} disabled={Boolean(session)} onChange={(event) => setTag(event.target.value)}>
+              {tags.map((tagName) => (
+                <option key={tagName} value={tagName}>
+                  {tagName}
+                </option>
+              ))}
+            </select>
+            <form className="quick-tag-form" onSubmit={addCustomTag}>
+              <input
+                value={newTag}
+                disabled={Boolean(session)}
+                onChange={(event) => setNewTag(event.target.value)}
+                placeholder="Add custom tag"
+              />
+              <button type="submit" disabled={Boolean(session) || !newTag.trim()}>
+                Add
+              </button>
+            </form>
+          </div>
           {tagMessage && <span className="field-note">{tagMessage}</span>}
         </label>
 
