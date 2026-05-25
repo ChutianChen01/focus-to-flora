@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { formatDateTime, formatMinutes } from '../utils/dateUtils';
 import { PlantMark } from './Timer';
 
@@ -8,6 +8,7 @@ function clamp(value, min, max) {
 
 export default function Garden({ sessions, tags, gardenPlacements, onGardenPlacementsChange }) {
   const [filter, setFilter] = useState('all');
+  const [dragPreview, setDragPreview] = useState(null);
   const groundRef = useRef(null);
 
   const completed = useMemo(
@@ -20,6 +21,42 @@ export default function Garden({ sessions, tags, gardenPlacements, onGardenPlace
   );
   const unplanted = visibleCompleted.filter((session) => !gardenPlacements[session.id]);
   const planted = visibleCompleted.filter((session) => gardenPlacements[session.id]);
+  const draggedSession = dragPreview ? completed.find((session) => session.id === dragPreview.sessionId) : null;
+
+  useEffect(() => {
+    if (!dragPreview) return undefined;
+    const sessionId = dragPreview.sessionId;
+
+    function handlePointerMove(event) {
+      setDragPreview((current) => current && { ...current, x: event.clientX, y: event.clientY });
+    }
+
+    function handlePointerUp(event) {
+      const rect = groundRef.current?.getBoundingClientRect();
+      if (rect) {
+        const isOverGround =
+          event.clientX >= rect.left &&
+          event.clientX <= rect.right &&
+          event.clientY >= rect.top &&
+          event.clientY <= rect.bottom;
+
+        if (isOverGround) {
+          const x = ((event.clientX - rect.left) / rect.width) * 100;
+          const y = ((event.clientY - rect.top) / rect.height) * 100;
+          plantAt(sessionId, x, y);
+        }
+      }
+
+      setDragPreview(null);
+    }
+
+    window.addEventListener('pointermove', handlePointerMove);
+    window.addEventListener('pointerup', handlePointerUp);
+    return () => {
+      window.removeEventListener('pointermove', handlePointerMove);
+      window.removeEventListener('pointerup', handlePointerUp);
+    };
+  }, [dragPreview?.sessionId, onGardenPlacementsChange]);
 
   function plantAt(sessionId, x, y) {
     onGardenPlacementsChange((current) => ({
@@ -46,31 +83,14 @@ export default function Garden({ sessions, tags, gardenPlacements, onGardenPlace
     });
   }
 
-  function handleDragStart(event, sessionId) {
-    event.dataTransfer.setData('text/plain', sessionId);
-    event.dataTransfer.effectAllowed = 'move';
-    event.currentTarget.classList.add('is-dragging');
-
-    const plantFigure = event.currentTarget.querySelector('.plant-mark');
-    if (plantFigure) {
-      const rect = plantFigure.getBoundingClientRect();
-      event.dataTransfer.setDragImage(plantFigure, rect.width / 2, rect.height / 2);
-    }
-  }
-
-  function handleDragEnd(event) {
-    event.currentTarget.classList.remove('is-dragging');
-  }
-
-  function handleDrop(event) {
+  function startPointerDrag(event, sessionId) {
+    if (event.target.closest('button')) return;
     event.preventDefault();
-    const sessionId = event.dataTransfer.getData('text/plain');
-    const rect = groundRef.current?.getBoundingClientRect();
-    if (!sessionId || !rect) return;
-
-    const x = ((event.clientX - rect.left) / rect.width) * 100;
-    const y = ((event.clientY - rect.top) / rect.height) * 100;
-    plantAt(sessionId, x, y);
+    setDragPreview({
+      sessionId,
+      x: event.clientX,
+      y: event.clientY,
+    });
   }
 
   return (
@@ -109,10 +129,8 @@ export default function Garden({ sessions, tags, gardenPlacements, onGardenPlace
                 {unplanted.map((session) => (
                   <article
                     key={session.id}
-                    className="library-flora"
-                    draggable
-                    onDragStart={(event) => handleDragStart(event, session.id)}
-                    onDragEnd={handleDragEnd}
+                    className={`library-flora ${dragPreview?.sessionId === session.id ? 'is-dragging' : ''}`}
+                    onPointerDown={(event) => startPointerDrag(event, session.id)}
                   >
                     <PlantMark type={session.plantType} compact />
                     <div>
@@ -133,8 +151,6 @@ export default function Garden({ sessions, tags, gardenPlacements, onGardenPlace
           <div
             ref={groundRef}
             className="garden-ground"
-            onDragOver={(event) => event.preventDefault()}
-            onDrop={handleDrop}
             aria-label="Garden ground"
           >
             {planted.map((session) => {
@@ -142,11 +158,9 @@ export default function Garden({ sessions, tags, gardenPlacements, onGardenPlace
               return (
                 <div
                   key={session.id}
-                  className="planted-flora"
-                  draggable
+                  className={`planted-flora ${dragPreview?.sessionId === session.id ? 'is-dragging' : ''}`}
                   style={{ left: `${placement.x}%`, top: `${placement.y}%` }}
-                  onDragStart={(event) => handleDragStart(event, session.id)}
-                  onDragEnd={handleDragEnd}
+                  onPointerDown={(event) => startPointerDrag(event, session.id)}
                   title={`${formatDateTime(session.endedAt)}\n${formatMinutes(session.actualMinutes)}\n${session.tag}`}
                 >
                   <PlantMark type={session.plantType} />
@@ -168,6 +182,11 @@ export default function Garden({ sessions, tags, gardenPlacements, onGardenPlace
               );
             })}
           </div>
+        </div>
+      )}
+      {draggedSession && (
+        <div className="flora-drag-ghost" style={{ left: dragPreview.x, top: dragPreview.y }} aria-hidden="true">
+          <PlantMark type={draggedSession.plantType} />
         </div>
       )}
     </section>

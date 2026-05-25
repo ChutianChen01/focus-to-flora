@@ -570,6 +570,8 @@ h3 {
   padding: 10px;
   background: color-mix(in srgb, var(--surface), var(--plant-dark) 8%);
   cursor: grab;
+  user-select: none;
+  touch-action: none;
 }
 
 .library-flora:active,
@@ -623,7 +625,17 @@ h3 {
   width: 82px;
   height: 104px;
   cursor: grab;
+  user-select: none;
+  touch-action: none;
   transform: translate(-50%, -75%);
+}
+
+.flora-drag-ghost {
+  position: fixed;
+  z-index: 1000;
+  pointer-events: none;
+  transform: translate(-50%, -72%);
+  filter: drop-shadow(0 18px 22px rgb(0 0 0 / 0.28));
 }
 
 .planted-flora .plot-detail {
