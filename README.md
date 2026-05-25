@@ -45,12 +45,12 @@ npm run preview
 
 ## GitHub Pages Deployment
 
-This project is configured for a repository named `focus-garden`.
+This project is configured for a repository named `focus-to-flora`.
 
 In `vite.config.js`, the deployment base is:
 
 ```js
-base: '/focus-garden/',
+base: '/focus-to-flora/',
 ```
 
 If you rename the repository, change that value to:
