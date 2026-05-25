@@ -267,12 +267,17 @@ h3 {
   gap: 8px;
   margin: 16px 0 24px;
   overflow-x: auto;
-  padding-bottom: 4px;
+  padding: 3px 0 5px;
 }
 
 .tab-nav button {
   min-width: 92px;
   white-space: nowrap;
+}
+
+.tab-nav button:hover:not(:disabled),
+.tab-nav button:focus-visible {
+  transform: none;
 }
 
 .timer-grid,
