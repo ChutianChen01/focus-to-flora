@@ -65,7 +65,7 @@ Then build the app:
 npm run build
 ```
 
-Deploy the generated `dist/` folder with your preferred GitHub Pages workflow. For example, you can configure GitHub Actions to build on push and publish `dist`, or use a Pages branch workflow if that is how your repository is set up.
+The included GitHub Actions workflow builds the app and publishes the generated `dist/` folder. In the GitHub repository settings, set **Pages** to deploy from **GitHub Actions**. Serving the repository root directly will not work for this Vite app because the root `index.html` is a development entry file.
 
 ## localStorage Data
 
