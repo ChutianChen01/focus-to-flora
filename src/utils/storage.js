@@ -3,6 +3,7 @@ const TAGS_KEY = 'focusToFlora.tags';
 const THEME_KEY = 'focusToFlora.theme';
 
 export const defaultTags = [
+  'lab',
   'coding',
   'reading',
   'writing',
@@ -38,11 +39,11 @@ export function saveSessions(sessions) {
 export function loadTags() {
   const tags = readJson(TAGS_KEY, defaultTags);
   if (!Array.isArray(tags)) return defaultTags;
-  return [...new Set([...defaultTags, ...tags.filter(Boolean).map(String)])].filter((tag) => tag !== 'lab');
+  return [...new Set([...defaultTags, ...tags.filter(Boolean).map(String)])];
 }
 
 export function saveTags(tags) {
-  writeJson(TAGS_KEY, [...new Set(tags.filter(Boolean).map((tag) => tag.trim()).filter(Boolean))].filter((tag) => tag !== 'lab'));
+  writeJson(TAGS_KEY, [...new Set(tags.filter(Boolean).map((tag) => tag.trim()).filter(Boolean))]);
 }
 
 export function loadTheme() {

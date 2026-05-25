@@ -306,6 +306,7 @@ h3 {
 .timer-panel {
   display: grid;
   align-content: center;
+  align-self: start;
   min-height: 460px;
 }
 
@@ -366,54 +367,24 @@ h3 {
 }
 
 .tag-picker {
-  position: relative;
   display: grid;
   gap: 10px;
-  border: 1px solid color-mix(in srgb, var(--accent), transparent 35%);
-  border-radius: 18px;
-  padding: 14px;
+  border: 2px solid color-mix(in srgb, var(--accent), transparent 40%);
+  border-radius: 16px;
+  padding: 12px;
   background:
-    radial-gradient(circle at 22px 18px, color-mix(in srgb, var(--accent), transparent 72%) 0 18px, transparent 19px),
+    linear-gradient(135deg, color-mix(in srgb, var(--plant), transparent 88%), transparent 55%),
     color-mix(in srgb, var(--surface-2), var(--plant-dark) 18%);
   box-shadow:
     inset 0 0 0 2px color-mix(in srgb, var(--plant), transparent 78%),
-    0 12px 28px rgb(0 0 0 / 0.16);
-}
-
-.tag-sprout {
-  position: absolute;
-  top: -9px;
-  left: 22px;
-  width: 26px;
-  height: 22px;
-}
-
-.tag-sprout::before,
-.tag-sprout::after {
-  position: absolute;
-  bottom: 0;
-  width: 16px;
-  height: 11px;
-  border-radius: 999px 999px 999px 4px;
-  background: var(--accent);
-  content: "";
-}
-
-.tag-sprout::before {
-  left: 1px;
-  transform: rotate(-28deg);
-}
-
-.tag-sprout::after {
-  right: 0;
-  transform: scaleX(-1) rotate(-28deg);
+    0 10px 24px rgb(0 0 0 / 0.14);
 }
 
 .tag-select {
   min-height: 48px;
   border-width: 2px;
   border-color: color-mix(in srgb, var(--accent), transparent 24%);
-  border-radius: 999px;
+  border-radius: 14px;
   background-color: color-mix(in srgb, var(--surface), var(--plant-dark) 12%);
   color: var(--text);
   font-weight: 800;
@@ -421,13 +392,13 @@ h3 {
 
 .quick-tag-form input {
   flex: 1 1 160px;
-  border-radius: 999px;
+  border-radius: 14px;
   background: color-mix(in srgb, var(--surface), transparent 5%);
 }
 
 .quick-tag-form button {
   flex: 0 0 auto;
-  border-radius: 999px;
+  border-radius: 14px;
 }
 
 .field-note {
