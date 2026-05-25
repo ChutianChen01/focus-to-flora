@@ -31,6 +31,8 @@ Start the development server:
 npm run dev
 ```
 
+The app development entry is `app.html`, so if the browser does not open automatically, visit the `/app.html` path shown by Vite.
+
 Build the production site:
 
 ```bash
@@ -65,7 +67,9 @@ Then build the app:
 npm run build
 ```
 
-The included GitHub Actions workflow builds the app and publishes the generated `dist/` folder. In the GitHub repository settings, set **Pages** to deploy from **GitHub Actions**. Serving the repository root directly will not work for this Vite app because the root `index.html` is a development entry file.
+The included GitHub Actions workflow builds the app and publishes the generated `dist/` folder. In the GitHub repository settings, set **Pages** to deploy from **GitHub Actions**.
+
+The build script also syncs the built `index.html` and `assets/` into the repository root. This keeps the site working even if GitHub Pages is still configured to deploy from the `main` branch root.
 
 ## localStorage Data
 
