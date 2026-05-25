@@ -22,14 +22,14 @@ const longPlants = [
 
 export function plantOptionsForMinutes(minutes) {
   const duration = Number(minutes);
-  if (duration <= 20) return shortPlants;
-  if (duration <= 60) return mediumPlants;
+  if (duration < 30) return shortPlants;
+  if (duration <= 90) return mediumPlants;
   return longPlants;
 }
 
 export function plantForMinutes(minutes) {
-  if (Number(minutes) > 60) return 'large tree';
-  if (Number(minutes) > 20) return 'oak tree';
+  if (Number(minutes) > 90) return 'large tree';
+  if (Number(minutes) >= 30) return 'oak tree';
   return 'flower';
 }
 
@@ -111,7 +111,8 @@ export default function Timer({ tags, onAddTag, onSessionSaved }) {
 
   const actualPlannedMinutes = useMemo(() => {
     const custom = Number(customMinutes);
-    return customMinutes && custom > 0 ? Math.round(custom) : plannedMinutes;
+    const minutes = customMinutes && custom > 0 ? Math.round(custom) : plannedMinutes;
+    return Math.min(480, Math.max(10, minutes));
   }, [customMinutes, plannedMinutes]);
   const availablePlants = useMemo(() => plantOptionsForMinutes(actualPlannedMinutes), [actualPlannedMinutes]);
 
@@ -175,7 +176,7 @@ export default function Timer({ tags, onAddTag, onSessionSaved }) {
   }
 
   function startSession() {
-    const minutes = Math.min(480, Math.max(1, actualPlannedMinutes));
+    const minutes = Math.min(480, Math.max(10, actualPlannedMinutes));
     setSession({
       startedAt: new Date().toISOString(),
       plannedMinutes: minutes,
@@ -269,7 +270,7 @@ export default function Timer({ tags, onAddTag, onSessionSaved }) {
           Custom minutes
           <input
             type="number"
-            min="1"
+            min="10"
             max="480"
             value={customMinutes}
             disabled={Boolean(session)}
@@ -309,9 +310,11 @@ export default function Timer({ tags, onAddTag, onSessionSaved }) {
           Plant
           <span className="field-note">
             {actualPlannedMinutes <= 20
-              ? 'Short sessions allow flowers, bushes, and fungi.'
-              : actualPlannedMinutes <= 60
-                ? 'Medium sessions unlock larger trees.'
+              ? 'Small-plant sessions start at 10 minutes.'
+              : actualPlannedMinutes < 30
+                ? 'Sessions under 30 minutes allow flowers, bushes, and fungi.'
+                : actualPlannedMinutes <= 90
+                  ? 'Tree sessions run from 30 to 90 minutes.'
                 : 'Long sessions keep the full tree nursery available.'}
           </span>
           <div className="plant-select">
