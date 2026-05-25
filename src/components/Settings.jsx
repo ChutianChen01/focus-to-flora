@@ -2,7 +2,7 @@ import { useState } from 'react';
 import BackupRestore from './BackupRestore';
 import { themes } from '../utils/storage';
 
-export default function Settings({ tags, theme, sessions, onAddTag, onThemeChange, onImport }) {
+export default function Settings({ tags, theme, sessions, gardenPlacements, onAddTag, onThemeChange, onImport }) {
   const [newTag, setNewTag] = useState('');
   const [message, setMessage] = useState('');
 
@@ -54,7 +54,13 @@ export default function Settings({ tags, theme, sessions, onAddTag, onThemeChang
           {message && <p className="settings-message">{message}</p>}
         </div>
 
-        <BackupRestore sessions={sessions} tags={tags} theme={theme} onImport={onImport} />
+        <BackupRestore
+          sessions={sessions}
+          tags={tags}
+          theme={theme}
+          gardenPlacements={gardenPlacements}
+          onImport={onImport}
+        />
       </div>
     </section>
   );

@@ -452,6 +452,156 @@ h3 {
   gap: 12px;
 }
 
+.garden-builder {
+  display: grid;
+  grid-template-columns: minmax(230px, 0.34fr) minmax(360px, 1fr);
+  gap: 16px;
+  align-items: stretch;
+}
+
+.flora-library,
+.garden-ground {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-2);
+}
+
+.flora-library {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  max-height: 640px;
+  overflow: auto;
+  padding: 14px;
+}
+
+.library-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.library-header h3 {
+  margin: 0;
+}
+
+.library-header span {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.25rem 0.55rem;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.library-list {
+  display: grid;
+  gap: 10px;
+}
+
+.library-flora {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid color-mix(in srgb, var(--line), var(--accent) 18%);
+  border-radius: 8px;
+  padding: 10px;
+  background: color-mix(in srgb, var(--surface), var(--plant-dark) 8%);
+  cursor: grab;
+}
+
+.library-flora:active,
+.planted-flora:active {
+  cursor: grabbing;
+}
+
+.library-flora strong,
+.library-flora span {
+  display: block;
+}
+
+.library-flora span {
+  color: var(--muted);
+  font-size: 0.84rem;
+}
+
+.library-flora button {
+  padding: 0.48rem 0.65rem;
+}
+
+.garden-ground {
+  position: relative;
+  min-height: 560px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 18% 22%, color-mix(in srgb, var(--plant), transparent 80%) 0 26px, transparent 27px),
+    radial-gradient(circle at 78% 72%, color-mix(in srgb, var(--accent-2), transparent 84%) 0 34px, transparent 35px),
+    linear-gradient(var(--line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--line) 1px, transparent 1px),
+    linear-gradient(180deg, color-mix(in srgb, var(--surface-2), var(--plant-dark) 18%), color-mix(in srgb, var(--soil), var(--surface) 58%));
+  background-size:
+    auto,
+    auto,
+    56px 56px,
+    56px 56px,
+    auto;
+  box-shadow: inset 0 0 0 6px color-mix(in srgb, var(--soil), transparent 24%);
+}
+
+.ground-label {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 1;
+  display: grid;
+  gap: 2px;
+  border: 1px solid color-mix(in srgb, var(--line), transparent 10%);
+  border-radius: 8px;
+  padding: 0.55rem 0.65rem;
+  background: color-mix(in srgb, var(--surface), transparent 8%);
+  color: var(--muted);
+  pointer-events: none;
+}
+
+.ground-label span {
+  color: var(--text);
+  font-weight: 800;
+}
+
+.ground-label small {
+  max-width: 210px;
+}
+
+.planted-flora {
+  position: absolute;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 82px;
+  height: 104px;
+  cursor: grab;
+  transform: translate(-50%, -75%);
+}
+
+.planted-flora .plot-detail {
+  bottom: calc(100% - 6px);
+  pointer-events: auto;
+  text-align: left;
+}
+
+.planted-flora .plot-detail button {
+  width: 100%;
+  margin-top: 0.65rem;
+  padding: 0.45rem 0.55rem;
+}
+
+.planted-flora:hover .plot-detail,
+.planted-flora:focus-visible .plot-detail {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
 .garden-plot {
   position: relative;
   display: grid;
@@ -961,6 +1111,14 @@ h3 {
 
   .timer-grid {
     grid-template-columns: 1fr;
+  }
+
+  .garden-builder {
+    grid-template-columns: 1fr;
+  }
+
+  .garden-ground {
+    min-height: 430px;
   }
 
   .timer-panel {

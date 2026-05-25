@@ -1,6 +1,7 @@
 const SESSIONS_KEY = 'focusToFlora.sessions';
 const TAGS_KEY = 'focusToFlora.tags';
 const THEME_KEY = 'focusToFlora.theme';
+const GARDEN_KEY = 'focusToFlora.gardenPlacements';
 
 export const defaultTags = [
   'lab',
@@ -36,6 +37,15 @@ export function saveSessions(sessions) {
   writeJson(SESSIONS_KEY, sessions);
 }
 
+export function loadGardenPlacements() {
+  const placements = readJson(GARDEN_KEY, {});
+  return placements && typeof placements === 'object' && !Array.isArray(placements) ? placements : {};
+}
+
+export function saveGardenPlacements(placements) {
+  writeJson(GARDEN_KEY, placements);
+}
+
 export function loadTags() {
   const tags = readJson(TAGS_KEY, defaultTags);
   if (!Array.isArray(tags)) return defaultTags;
@@ -55,7 +65,7 @@ export function saveTheme(theme) {
   localStorage.setItem(THEME_KEY, themes.includes(theme) ? theme : 'dark');
 }
 
-export function buildBackup(sessions, tags, theme) {
+export function buildBackup(sessions, tags, theme, gardenPlacements = {}) {
   return {
     app: 'Focus to Flora',
     version: 1,
@@ -63,6 +73,7 @@ export function buildBackup(sessions, tags, theme) {
     sessions,
     tags,
     theme,
+    gardenPlacements,
   };
 }
 
@@ -97,6 +108,10 @@ export function validateBackup(data) {
 
   if (data.theme && !themes.includes(data.theme)) {
     return { ok: false, message: 'Backup theme is not recognized.' };
+  }
+
+  if (data.gardenPlacements && (typeof data.gardenPlacements !== 'object' || Array.isArray(data.gardenPlacements))) {
+    return { ok: false, message: 'Backup garden placements are not valid.' };
   }
 
   return { ok: true };

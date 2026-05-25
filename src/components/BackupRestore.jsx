@@ -1,12 +1,12 @@
 import { useRef, useState } from 'react';
 import { buildBackup, validateBackup } from '../utils/storage';
 
-export default function BackupRestore({ sessions, tags, theme, onImport }) {
+export default function BackupRestore({ sessions, tags, theme, gardenPlacements, onImport }) {
   const inputRef = useRef(null);
   const [message, setMessage] = useState('');
 
   function exportJson() {
-    const backup = buildBackup(sessions, tags, theme);
+    const backup = buildBackup(sessions, tags, theme, gardenPlacements);
     const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');

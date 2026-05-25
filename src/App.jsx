@@ -7,8 +7,10 @@ import Settings from './components/Settings';
 import {
   defaultTags,
   loadSessions,
+  loadGardenPlacements,
   loadTags,
   loadTheme,
+  saveGardenPlacements,
   saveSessions,
   saveTags,
   saveTheme,
@@ -25,6 +27,7 @@ const views = [
 export default function App() {
   const [activeView, setActiveView] = useState('timer');
   const [sessions, setSessions] = useState(() => loadSessions());
+  const [gardenPlacements, setGardenPlacements] = useState(() => loadGardenPlacements());
   const [tags, setTags] = useState(() => loadTags());
   const [theme, setTheme] = useState(() => loadTheme());
 
@@ -36,6 +39,10 @@ export default function App() {
   useEffect(() => {
     saveSessions(sessions);
   }, [sessions]);
+
+  useEffect(() => {
+    saveGardenPlacements(gardenPlacements);
+  }, [gardenPlacements]);
 
   useEffect(() => {
     saveTags(tags);
@@ -50,13 +57,21 @@ export default function App() {
 
   function deleteSession(id) {
     const confirmed = window.confirm('Delete this session record?');
-    if (confirmed) setSessions((current) => current.filter((session) => session.id !== id));
+    if (confirmed) {
+      setSessions((current) => current.filter((session) => session.id !== id));
+      setGardenPlacements((current) => {
+        const next = { ...current };
+        delete next[id];
+        return next;
+      });
+    }
   }
 
   function clearAll() {
     const confirmed = window.confirm('Clear all sessions and custom app data from this browser?');
     if (confirmed) {
       setSessions([]);
+      setGardenPlacements({});
       setTags(defaultTags);
       setTheme('dark');
     }
@@ -70,6 +85,7 @@ export default function App() {
 
   function importBackup(data) {
     setSessions(data.sessions);
+    setGardenPlacements(data.gardenPlacements || {});
     setTags([...new Set([...defaultTags, ...data.tags])]);
     setTheme(data.theme || 'dark');
   }
@@ -98,7 +114,14 @@ export default function App() {
 
       <main>
         {activeView === 'timer' && <Timer tags={tags} onAddTag={addTag} onSessionSaved={addSession} />}
-        {activeView === 'garden' && <Garden sessions={sessions} tags={tags} />}
+        {activeView === 'garden' && (
+          <Garden
+            sessions={sessions}
+            tags={tags}
+            gardenPlacements={gardenPlacements}
+            onGardenPlacementsChange={setGardenPlacements}
+          />
+        )}
         {activeView === 'stats' && <Stats sessions={sessions} />}
         {activeView === 'history' && (
           <History sessions={sessions} onDeleteSession={deleteSession} onClearAll={clearAll} />
@@ -108,6 +131,7 @@ export default function App() {
             tags={tags}
             theme={theme}
             sessions={sessions}
+            gardenPlacements={gardenPlacements}
             onAddTag={addTag}
             onThemeChange={setTheme}
             onImport={importBackup}
