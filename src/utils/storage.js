@@ -2,6 +2,7 @@ const SESSIONS_KEY = 'focusToFlora.sessions';
 const TAGS_KEY = 'focusToFlora.tags';
 const THEME_KEY = 'focusToFlora.theme';
 const GARDEN_KEY = 'focusToFlora.gardenPlacements';
+const ACTIVE_TIMER_KEY = 'focusToFlora.activeTimer';
 
 export const defaultTags = [
   'lab',
@@ -35,6 +36,32 @@ export function loadSessions() {
 
 export function saveSessions(sessions) {
   writeJson(SESSIONS_KEY, sessions);
+}
+
+function isValidActiveTimer(timer) {
+  return (
+    timer &&
+    typeof timer.startedAt === 'string' &&
+    Number.isFinite(Number(timer.plannedMinutes)) &&
+    typeof timer.tag === 'string' &&
+    typeof timer.note === 'string' &&
+    typeof timer.plantType === 'string' &&
+    Number.isFinite(Number(timer.totalPausedMs || 0)) &&
+    (timer.pausedAt === null || typeof timer.pausedAt === 'string')
+  );
+}
+
+export function loadActiveTimer() {
+  const timer = readJson(ACTIVE_TIMER_KEY, null);
+  return isValidActiveTimer(timer) ? timer : null;
+}
+
+export function saveActiveTimer(timer) {
+  if (timer) writeJson(ACTIVE_TIMER_KEY, timer);
+}
+
+export function clearActiveTimer() {
+  localStorage.removeItem(ACTIVE_TIMER_KEY);
 }
 
 export function loadGardenPlacements() {

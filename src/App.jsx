@@ -5,6 +5,7 @@ import History from './components/History';
 import Stats from './components/Stats';
 import Settings from './components/Settings';
 import {
+  clearActiveTimer,
   defaultTags,
   loadSessions,
   loadGardenPlacements,
@@ -72,6 +73,7 @@ export default function App() {
     if (confirmed) {
       setSessions([]);
       setGardenPlacements({});
+      clearActiveTimer();
       setTags(defaultTags);
       setTheme('dark');
     }
@@ -86,6 +88,7 @@ export default function App() {
   function importBackup(data) {
     setSessions(data.sessions);
     setGardenPlacements(data.gardenPlacements || {});
+    clearActiveTimer();
     setTags([...new Set([...defaultTags, ...data.tags])]);
     setTheme(data.theme || 'dark');
   }

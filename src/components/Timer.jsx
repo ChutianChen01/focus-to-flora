@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { formatTimer } from '../utils/dateUtils';
+import { clearActiveTimer, loadActiveTimer, saveActiveTimer } from '../utils/storage';
 
 const presets = [25, 50, 60, 90];
 const shortPlants = [
@@ -31,6 +32,15 @@ export function plantForMinutes(minutes) {
   if (Number(minutes) > 90) return 'large tree';
   if (Number(minutes) >= 30) return 'oak tree';
   return 'flower';
+}
+
+function getRemainingSeconds(activeSession) {
+  if (!activeSession) return 0;
+  const started = new Date(activeSession.startedAt).getTime();
+  const now = activeSession.pausedAt ? new Date(activeSession.pausedAt).getTime() : Date.now();
+  const elapsedMs = now - started - Number(activeSession.totalPausedMs || 0);
+  const plannedMs = Number(activeSession.plannedMinutes) * 60 * 1000;
+  return Math.max(0, Math.ceil((plannedMs - elapsedMs) / 1000));
 }
 
 export function PlantMark({ type, status = 'completed', compact = false }) {
@@ -105,9 +115,12 @@ export default function Timer({ tags, onAddTag, onSessionSaved }) {
   const [tagMessage, setTagMessage] = useState('');
   const [plantType, setPlantType] = useState('oak tree');
   const [note, setNote] = useState('');
-  const [session, setSession] = useState(null);
-  const [remainingSeconds, setRemainingSeconds] = useState(50 * 60);
-  const [isPaused, setIsPaused] = useState(false);
+  const [session, setSession] = useState(() => loadActiveTimer());
+  const [remainingSeconds, setRemainingSeconds] = useState(() => {
+    const activeTimer = loadActiveTimer();
+    return activeTimer ? getRemainingSeconds(activeTimer) : 50 * 60;
+  });
+  const [isPaused, setIsPaused] = useState(() => Boolean(loadActiveTimer()?.pausedAt));
   const intervalRef = useRef(null);
   const tagPickerRef = useRef(null);
 
@@ -142,44 +155,43 @@ export default function Timer({ tags, onAddTag, onSessionSaved }) {
   }, [availablePlants, plantType, session]);
 
   useEffect(() => {
-    if (!session || isPaused) return undefined;
+    if (!session) return undefined;
 
     intervalRef.current = window.setInterval(() => {
-      setRemainingSeconds((seconds) => {
-        if (seconds <= 1) {
-          window.clearInterval(intervalRef.current);
-          finishSession('completed', 0);
-          return 0;
-        }
-        return seconds - 1;
-      });
+      const nextRemaining = getRemainingSeconds(session);
+      setRemainingSeconds(nextRemaining);
+      if (nextRemaining <= 0) {
+        window.clearInterval(intervalRef.current);
+        finishSession('completed', session, 0);
+      }
     }, 1000);
 
     return () => window.clearInterval(intervalRef.current);
-  }, [session, isPaused]);
+  }, [session]);
 
-  function createRecord(status, remainingOverride = remainingSeconds) {
+  function createRecord(status, activeSession = session, remainingOverride = remainingSeconds) {
     const endedAt = new Date();
-    const elapsedMinutes = Math.round((session.plannedMinutes * 60 - remainingOverride) / 60);
+    const elapsedMinutes = Math.round((activeSession.plannedMinutes * 60 - remainingOverride) / 60);
     const actualMinutes = status === 'completed' ? Math.max(1, elapsedMinutes) : Math.max(0, elapsedMinutes);
 
     return {
       id: crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`,
-      startedAt: session.startedAt,
+      startedAt: activeSession.startedAt,
       endedAt: endedAt.toISOString(),
-      plannedMinutes: session.plannedMinutes,
+      plannedMinutes: activeSession.plannedMinutes,
       actualMinutes,
       status,
-      tag: session.tag,
-      note: session.note,
-      plantType: session.plantType,
+      tag: activeSession.tag,
+      note: activeSession.note,
+      plantType: activeSession.plantType,
       createdAt: endedAt.toISOString(),
     };
   }
 
-  function finishSession(status, remainingOverride = remainingSeconds) {
-    if (!session) return;
-    const record = createRecord(status, remainingOverride);
+  function finishSession(status, activeSession = session, remainingOverride = remainingSeconds) {
+    if (!activeSession) return;
+    const record = createRecord(status, activeSession, remainingOverride);
+    clearActiveTimer();
     onSessionSaved(record);
     setSession(null);
     setIsPaused(false);
@@ -188,21 +200,51 @@ export default function Timer({ tags, onAddTag, onSessionSaved }) {
 
   function startSession() {
     const minutes = Math.min(480, Math.max(10, actualPlannedMinutes));
-    setSession({
+    const activeSession = {
       startedAt: new Date().toISOString(),
       plannedMinutes: minutes,
       tag,
       note: note.trim(),
       plantType,
-    });
+      pausedAt: null,
+      totalPausedMs: 0,
+    };
+    saveActiveTimer(activeSession);
+    setSession(activeSession);
     setRemainingSeconds(minutes * 60);
+    setIsPaused(false);
+  }
+
+  function pauseSession() {
+    if (!session || session.pausedAt) return;
+    const pausedSession = {
+      ...session,
+      pausedAt: new Date().toISOString(),
+    };
+    saveActiveTimer(pausedSession);
+    setSession(pausedSession);
+    setRemainingSeconds(getRemainingSeconds(pausedSession));
+    setIsPaused(true);
+  }
+
+  function resumeSession() {
+    if (!session?.pausedAt) return;
+    const pausedMs = Date.now() - new Date(session.pausedAt).getTime();
+    const resumedSession = {
+      ...session,
+      pausedAt: null,
+      totalPausedMs: Number(session.totalPausedMs || 0) + Math.max(0, pausedMs),
+    };
+    saveActiveTimer(resumedSession);
+    setSession(resumedSession);
+    setRemainingSeconds(getRemainingSeconds(resumedSession));
     setIsPaused(false);
   }
 
   function cancelSession() {
     if (!session) return;
     const confirmed = window.confirm('Cancel this focus session? It will be saved as cancelled.');
-    if (confirmed) finishSession('cancelled');
+    if (confirmed) finishSession('cancelled', session, getRemainingSeconds(session));
   }
 
   function selectPreset(minutes) {
@@ -239,18 +281,18 @@ export default function Timer({ tags, onAddTag, onSessionSaved }) {
             </button>
           )}
           {session && !isPaused && (
-            <button className="primary" onClick={() => setIsPaused(true)}>
+            <button className="primary" onClick={pauseSession}>
               Pause
             </button>
           )}
           {session && isPaused && (
-            <button className="primary" onClick={() => setIsPaused(false)}>
+            <button className="primary" onClick={resumeSession}>
               Resume
             </button>
           )}
           {session && (
             <>
-              <button onClick={() => finishSession('completed')}>Complete</button>
+              <button onClick={() => finishSession('completed', session, getRemainingSeconds(session))}>Complete</button>
               <button className="danger" onClick={cancelSession}>
                 Cancel
               </button>
