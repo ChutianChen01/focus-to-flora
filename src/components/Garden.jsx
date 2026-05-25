@@ -125,10 +125,6 @@ export default function Garden({ sessions, tags, gardenPlacements, onGardenPlace
             onDrop={handleDrop}
             aria-label="Garden ground"
           >
-            <div className="ground-label">
-              <span>Limited ground</span>
-              <small>Drag flora here, then drag again to move.</small>
-            </div>
             {planted.map((session) => {
               const placement = gardenPlacements[session.id];
               return (
