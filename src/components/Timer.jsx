@@ -100,6 +100,7 @@ export default function Timer({ tags, onAddTag, onSessionSaved }) {
   const [plannedMinutes, setPlannedMinutes] = useState(50);
   const [customMinutes, setCustomMinutes] = useState('');
   const [tag, setTag] = useState(tags[0] || 'lab');
+  const [isTagMenuOpen, setIsTagMenuOpen] = useState(false);
   const [newTag, setNewTag] = useState('');
   const [tagMessage, setTagMessage] = useState('');
   const [plantType, setPlantType] = useState('oak tree');
@@ -108,6 +109,7 @@ export default function Timer({ tags, onAddTag, onSessionSaved }) {
   const [remainingSeconds, setRemainingSeconds] = useState(50 * 60);
   const [isPaused, setIsPaused] = useState(false);
   const intervalRef = useRef(null);
+  const tagPickerRef = useRef(null);
 
   const actualPlannedMinutes = useMemo(() => {
     const custom = Number(customMinutes);
@@ -123,6 +125,15 @@ export default function Timer({ tags, onAddTag, onSessionSaved }) {
   useEffect(() => {
     if (!tags.includes(tag)) setTag(tags[0] || 'other');
   }, [tag, tags]);
+
+  useEffect(() => {
+    function closeTagMenu(event) {
+      if (!tagPickerRef.current?.contains(event.target)) setIsTagMenuOpen(false);
+    }
+
+    document.addEventListener('pointerdown', closeTagMenu);
+    return () => document.removeEventListener('pointerdown', closeTagMenu);
+  }, []);
 
   useEffect(() => {
     if (!session && !availablePlants.some((plant) => plant.value === plantType)) {
@@ -285,14 +296,37 @@ export default function Timer({ tags, onAddTag, onSessionSaved }) {
 
         <label className="tag-field">
           Tag
-          <div className="tag-picker">
-            <select className="tag-select" value={tag} disabled={Boolean(session)} onChange={(event) => setTag(event.target.value)}>
-              {tags.map((tagName) => (
-                <option key={tagName} value={tagName}>
-                  {tagName}
-                </option>
-              ))}
-            </select>
+          <div className="tag-picker" ref={tagPickerRef}>
+            <button
+              type="button"
+              className="tag-select-button"
+              disabled={Boolean(session)}
+              aria-haspopup="listbox"
+              aria-expanded={isTagMenuOpen}
+              onClick={() => setIsTagMenuOpen((isOpen) => !isOpen)}
+            >
+              <span>{tag}</span>
+              <span aria-hidden="true">⌄</span>
+            </button>
+            {isTagMenuOpen && (
+              <div className="tag-menu" role="listbox" aria-label="Focus tag">
+                {tags.map((tagName) => (
+                  <button
+                    type="button"
+                    key={tagName}
+                    className={tag === tagName ? 'active' : ''}
+                    role="option"
+                    aria-selected={tag === tagName}
+                    onClick={() => {
+                      setTag(tagName);
+                      setIsTagMenuOpen(false);
+                    }}
+                  >
+                    {tagName}
+                  </button>
+                ))}
+              </div>
+            )}
             <form className="quick-tag-form" onSubmit={addCustomTag}>
               <input
                 value={newTag}
